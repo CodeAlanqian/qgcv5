@@ -230,7 +230,7 @@ if(GStreamer_USE_STATIC_LIBS)
         gstreamer-base-1.0
         gstreamer-video-1.0
         gstreamer-gl-1.0
-        gstreamer-gl-prototypes-1.0
+        # gstreamer-gl-prototypes-1.0
         gstreamer-rtsp-1.0
         # gstreamer-gl-egl-1.0
         # gstreamer-gl-wayland-1.0
@@ -339,7 +339,10 @@ find_gstreamer_component(Core gstreamer-1.0)
 find_gstreamer_component(Base gstreamer-base-1.0)
 find_gstreamer_component(Video gstreamer-video-1.0)
 find_gstreamer_component(Gl gstreamer-gl-1.0)
-find_gstreamer_component(GlPrototypes gstreamer-gl-prototypes-1.0)
+# find_gstreamer_component(GlPrototypes gstreamer-gl-prototypes-1.0)
+if(GlPrototypes IN_LIST GStreamer_FIND_COMPONENTS)
+    find_gstreamer_component(GlPrototypes gstreamer-gl-prototypes-1.0)
+endif()
 find_gstreamer_component(Rtsp gstreamer-rtsp-1.0)
 
 ################################################################################
@@ -406,9 +409,11 @@ if(GStreamer_FOUND AND NOT TARGET GStreamer::GStreamer)
             GStreamer::Base
             GStreamer::Video
             GStreamer::Gl
-            GStreamer::GlPrototypes
             GStreamer::Rtsp
     )
+    if(TARGET GStreamer::GlPrototypes)
+        target_link_libraries(GStreamer::GStreamer INTERFACE GStreamer::GlPrototypes)
+    endif()
 
     foreach(component IN LISTS GStreamer_FIND_COMPONENTS)
         if(GStreamer_${component}_FOUND)
