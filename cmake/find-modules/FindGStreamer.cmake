@@ -402,6 +402,11 @@ if(GStreamer_FOUND AND NOT TARGET GStreamer::GStreamer)
     endif()
 
     target_link_directories(GStreamer::GStreamer INTERFACE ${GSTREAMER_LIB_PATH})
+    if(EXISTS "${GSTREAMER_INCLUDE_PATH}/gstreamer-1.0")
+        target_include_directories(GStreamer::GStreamer INTERFACE
+            "${GSTREAMER_INCLUDE_PATH}/gstreamer-1.0"
+        )
+    endif()
 
     target_link_libraries(GStreamer::GStreamer
         INTERFACE
