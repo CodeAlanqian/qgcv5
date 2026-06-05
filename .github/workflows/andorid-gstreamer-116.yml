@@ -75,6 +75,24 @@ jobs:
           printf "%s" "$ANDROID_KEYSTORE_BASE64" | base64 -d > "${{ env.QT_ANDROID_KEYSTORE_PATH }}"
           ls -lh "${{ env.QT_ANDROID_KEYSTORE_PATH }}"
 
+      - name: Patch GStreamer archive suffix for 1.16.3
+        if: env.GSTREAMER_VERSION == '1.16.3'
+        run: |
+            python3 <<'PY'
+            from pathlib import Path
+
+            p = Path("cmake/find-modules/FindGStreamer.cmake")
+            s = p.read_text()
+
+            s = s.replace(
+                "gstreamer-1.0-android-universal-${GStreamer_FIND_VERSION}.tar.xz",
+                "gstreamer-1.0-android-universal-${GStreamer_FIND_VERSION}.tar.bz2"
+            )
+
+            p.write_text(s)
+            print("Patched GStreamer Android package suffix: .tar.xz -> .tar.bz2")
+            PY
+
       - name: Configure
         working-directory: ${{ runner.temp }}/shadow_build_dir
         run: |
@@ -96,9 +114,22 @@ jobs:
         working-directory: ${{ runner.temp }}/shadow_build_dir
         run: |
           cmake --build . --target all --config ${{ matrix.BuildType }}
+
+          rm -rf artifacts
           mkdir -p artifacts
-          find . -name "*.apk" -print
-          find . -name "*.apk" -exec cp {} artifacts/ \;
+
+          APK_PATH="$(find . -name "QGroundControl.apk" | head -n 1)"
+
+          if [ -z "$APK_PATH" ]; then
+            echo "QGroundControl.apk not found"
+            find . -name "*.apk" -print
+            exit 1
+          fi
+
+          echo "Found APK: $APK_PATH"
+
+          cp "$APK_PATH" "artifacts/QGroundControl-GStreamer-${GSTREAMER_VERSION}.apk"
+
           ls -lh artifacts
 
       - name: Verify APK signing
@@ -108,13 +139,13 @@ jobs:
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)"
           echo "Using apksigner: $APKSIGNER"
 
-          for apk in artifacts/*.apk; do
-            echo "Verifying $apk"
-            "$APKSIGNER" verify --print-certs "$apk" || true
-          done
+          APK="artifacts/QGroundControl-GStreamer-${GSTREAMER_VERSION}.apk"
+
+          echo "Verifying $APK"
+          "$APKSIGNER" verify --print-certs "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: QGroundControl-Android-GStreamer-${{ env.GSTREAMER_VERSION }}
-          path: ${{ runner.temp }}/shadow_build_dir/artifacts/QGroundControl.apk
+          path: ${{ runner.temp }}/shadow_build_dir/artifacts/QGroundControl-gst-${{ env.GSTREAMER_VERSION }}.apk
