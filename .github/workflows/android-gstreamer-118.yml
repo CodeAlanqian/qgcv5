@@ -90,6 +90,7 @@ jobs:
             -DQT_ANDROID_SIGN_APK=${{ env.ANDROID_KEYSTORE_BASE64 != '' && 'ON' || 'OFF' }} \
             -DQGC_STABLE_BUILD=ON \
             -DGStreamer_FIND_VERSION="${{ env.GSTREAMER_VERSION }}"
+            -DQT_ANDROID_MULTI_ABI_FORWARD_VARS="GStreamer_FIND_VERSION"
 
       - name: Build
         working-directory: ${{ runner.temp }}/shadow_build_dir
