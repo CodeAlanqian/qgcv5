@@ -108,7 +108,8 @@ jobs:
             -DQT_ANDROID_SIGN_APK=${{ env.ANDROID_KEYSTORE_BASE64 != '' && 'ON' || 'OFF' }} \
             -DQGC_STABLE_BUILD=ON \
             -DGStreamer_FIND_VERSION="${{ env.GSTREAMER_VERSION }}" \
-            -DQT_ANDROID_MULTI_ABI_FORWARD_VARS="GStreamer_FIND_VERSION"
+            -DQGC_VERSION_BASE="Stable_V5.0" \
+            -DQT_ANDROID_MULTI_ABI_FORWARD_VARS="GStreamer_FIND_VERSION;QGC_VERSION_BASE"
 
       - name: Build
         working-directory: ${{ runner.temp }}/shadow_build_dir
@@ -128,7 +129,7 @@ jobs:
 
           echo "Found APK: $APK_PATH"
 
-          cp "$APK_PATH" "artifacts/QGroundControl-GStreamer-${GSTREAMER_VERSION}.apk"
+          cp "$APK_PATH" "artifacts/QGC-V5.0-gst-${GSTREAMER_VERSION}.apk"
 
           ls -lh artifacts
 
@@ -139,7 +140,7 @@ jobs:
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)"
           echo "Using apksigner: $APKSIGNER"
 
-          APK="artifacts/QGroundControl-GStreamer-${GSTREAMER_VERSION}.apk"
+          APK="artifacts/QGC-V5.0-gst-${GSTREAMER_VERSION}.apk"
 
           echo "Verifying $APK"
           "$APKSIGNER" verify --print-certs "$APK"
@@ -148,4 +149,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: QGroundControl-Android-GStreamer-${{ env.GSTREAMER_VERSION }}
-          path: ${{ runner.temp }}/shadow_build_dir/artifacts/QGroundControl-gst-${{ env.GSTREAMER_VERSION }}.apk
+          path: ${{ runner.temp }}/shadow_build_dir/artifacts/QGC-V5.0-gst-${{ env.GSTREAMER_VERSION }}.apk
