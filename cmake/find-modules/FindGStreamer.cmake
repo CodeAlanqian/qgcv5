@@ -104,6 +104,22 @@ elseif(ANDROID)
         # URL_HASH be92cf477d140c270b480bd8ba0e26b1e01c8db042c46b9e234d87352112e485
     )
 
+    # 修复GStreamer 1.16.3 的 pkg-config 文件和当前 NDK r26/Qt 6.8 构建链兼容问题
+    if(GStreamer_FIND_VERSION VERSION_EQUAL "1.16.3")
+        message(STATUS "Patching GStreamer 1.16.3 pkg-config files: removing gnustl backtick libs")
+
+        file(GLOB_RECURSE GSTREAMER_PC_FILES
+            "${gstreamer_SOURCE_DIR}/*.pc"
+        )
+
+        foreach(_pc_file IN LISTS GSTREAMER_PC_FILES)
+            file(READ "${_pc_file}" _pc_content)
+            string(REPLACE "`pkg-config --libs gnustl`" "" _pc_content "${_pc_content}")
+            string(REPLACE "\`pkg-config --libs gnustl\`" "" _pc_content "${_pc_content}")
+            file(WRITE "${_pc_file}" "${_pc_content}")
+        endforeach()
+    endif()
+
     if(NOT DEFINED GStreamer_ROOT_DIR)
         if(CMAKE_ANDROID_ARCH_ABI STREQUAL "armeabi-v7a")
             set(GStreamer_ROOT_DIR "${gstreamer_SOURCE_DIR}/armv7")
